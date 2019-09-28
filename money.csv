@@ -1,0 +1,11 @@
+Initialization,initial,+0.0,0.0
+Fri Sep 27 17:43:48 2019,deposit,+100,100.0
+Fri Sep 27 17:44:25 2019,withdraw,-15,85.0
+Fri Sep 27 17:44:25 2019,withdraw,-15,70.0
+Fri Sep 27 17:44:57 2019,withdraw,-5,65.0
+Fri Sep 27 17:44:57 2019,withdraw,-5,60.0
+Fri Sep 27 17:49:18 2019,deposit,+40,100.0
+Fri Sep 27 17:49:24 2019,withdraw,-25.0,75.0
+Fri Sep 27 17:52:10 2019,withdraw,-5,70.0
+Fri Sep 27 17:53:00 2019,withdraw,-20,50.0
+Fri Sep 27 17:53:55 2019,deposit,+150,200.0
