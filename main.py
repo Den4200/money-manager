@@ -7,11 +7,11 @@ import time
 class User:
     pass
 
-class BankManager(User):
+class BankManager:
     
     def __init__(self):
-        self.b_file = os.path.join(sys.path[0], "banks\\banks.csv")
-        self.sl_file = os.path.join(sys.path[0], "banks\\session.lock")
+        self.b_file = os.path.join(sys.path[0], "banks", "banks.csv")
+        self.bsl_file = os.path.join(sys.path[0], "banks", "session.lock")
 
     def listBanks(self):
         banks = []
@@ -25,17 +25,19 @@ class BankManager(User):
         return banks
 
     def addBank(self, bank):
-        os.mkdir('banks\\'+ bank)
+        os.mkdir(os.path.join(sys.path[0], 'banks', bank))
 
         with open(self.b_file, 'a') as f:
             f.write(bank + '\n')
 
-        with open('banks\\' + bank + '\\' 'transactions.csv', 'w') as f:
-            f.write('Initialization,initial,+0.0,0.0\n')
+        self.chooseBank(bank)
+
+        AccountsManager()._initAccounts()
+        TransactionsManager()._initTransactions()
 
     def delBank(self, bank):
         read = open(self.b_file, 'r')
-        f = open(os.path.join(sys.path[0], "banks\\banks_temp.csv"), 'w')
+        f = open(os.path.join(sys.path[0], "banks", "banks_temp.csv"), 'w')
 
         reader = read.readlines()
 
@@ -47,23 +49,97 @@ class BankManager(User):
         f.close()
 
         os.remove(self.b_file)
-        os.rename(os.path.join(sys.path[0], "banks\\banks_temp.csv"), os.path.join(sys.path[0], "banks\\banks.csv"))
+        os.rename(os.path.join(sys.path[0], "banks", "banks_temp.csv"), self.b_file)
 
-        shutil.rmtree(os.path.join(sys.path[0], "banks\\" + bank))
+        shutil.rmtree(os.path.join(sys.path[0], "banks", bank))
 
     def chooseBank(self, bank):
-        with open(self.sl_file, 'w') as f:
-            f.write('')
+        with open(self.bsl_file, 'w') as f:
             f.write(bank)
 
     def _returnCurrent(self):
-        with open(self.sl_file, 'r') as f:
+        with open(self.bsl_file, 'r') as f:
             return f.read()
 
-class TransactionsManager(BankManager):
+class AccountsManager:
+    
+    def __init__(self):
+        self.a_file = os.path.join(sys.path[0], "banks", BankManager()._returnCurrent(), "accounts.csv")
+        self.asl_file = os.path.join(sys.path[0], "banks", BankManager()._returnCurrent(), "session.lock")
+        self.b_folder = os.path.join(sys.path[0], 'banks', BankManager()._returnCurrent())
+
+    def _initAccounts(self):
+        os.mkdir(os.path.join(self.b_folder, 'Checking Account'))
+        os.mkdir(os.path.join(self.b_folder, 'Savings Account'))
+
+        with open(self.a_file, 'w') as f:
+            f.write('Checking Account\nSavings Account\n')
+
+        with open(self.asl_file, 'w') as f:
+            f.write('')
+
+    def listAccounts(self):
+        accounts = []
+
+        with open(self.a_file, 'r') as f:
+            lines = f.readlines()
+
+            for line in lines:
+                accounts.append(line[:-1])
+
+        return accounts
+
+    def addAccount(self, account):
+        os.mkdir(os.path.join(self.b_folder, account))
+
+        self.chooseAccount(account)
+
+        TransactionsManager()._newTransactionsFile(account)
+
+        with open(self.a_file, 'a') as f:
+            f.write(account + '\n')
+
+    def delAccount(self, account):
+        read = open(self.a_file, 'r')
+        f = open(os.path.join(sys.path[0], "banks", BankManager()._returnCurrent(), "accounts_temp.csv"), 'w')
+
+        reader = read.readlines()
+
+        for line in reader:
+            if account != line[:-1]:
+                f.write(line)
+
+        read.close()
+        f.close()
+
+        os.remove(self.a_file)
+        os.rename(os.path.join(sys.path[0], "banks", BankManager()._returnCurrent(), "accounts_temp.csv"), self.a_file)
+
+        shutil.rmtree(os.path.join(sys.path[0], "banks", BankManager()._returnCurrent(), account))
+
+    def chooseAccount(self, account):
+        with open(self.asl_file, 'w') as f:
+            f.write(account)
+
+    def _returnCurrent(self):
+        with open(self.asl_file, 'r') as f:
+            return f.read()
+
+class TransactionsManager:
 
     def __init__(self):
-        self.t_file = os.path.join(sys.path[0], "banks\\" + BankManager()._returnCurrent() + "\\transactions.csv")
+        self.t_file = os.path.join(sys.path[0], "banks", BankManager()._returnCurrent(), AccountsManager()._returnCurrent(), "transactions.csv")
+
+    def _initTransactions(self):
+        with open(os.path.join(sys.path[0], 'banks', BankManager()._returnCurrent(), 'Checking Account', 'transactions.csv'), 'w') as f:
+            f.write('Initialization,initial,+0.0,0.0\n')
+
+        with open(os.path.join(sys.path[0], 'banks', BankManager()._returnCurrent(), 'Savings Account', 'transactions.csv'), 'w') as f:
+            f.write('Initialization,initial,+0.0,0.0\n')
+
+    def _newTransactionsFile(self, account):
+        with open(self.t_file, 'w') as f:
+            f.write('Initialization,initial,+0.0,0.0\n')
 
     def _store(self, op, amount, total):
 
@@ -144,7 +220,8 @@ class TransactionsManager(BankManager):
 
 def mainLoop():
 
-    while True:
+    run1 = True
+    while run1:
 
         bank_op = input("""
         --------------------------
@@ -165,41 +242,102 @@ def mainLoop():
 
             BankManager().chooseBank(bank)
 
+            run2 = True
+            while run2:
+                acc_op = input("""
+                --------------------------
+                | 1. Choose account      |
+                | 2. Add account         |
+                | 3. Remove account      |
+                | 4. List accounts       |
+                | 5. Back                |
+                | 6. Exit                |
+                --------------------------
 
-            option = input("""
-            --------------------------
-            | 1. Deposit             |
-            | 2. Withdraw            |
-            | 3. List transactions   |
-            | 4. Exit                |
-            --------------------------
+                Option: """)
 
-            Option: """)
+                if acc_op == '1':
+                    for account in AccountsManager().listAccounts():
+                        print(account)
+                    
+                    account = input('\nAccount (Type in exactly as shown): ')
 
-            if option == '1':
-                a = input('\nAmount to deposit: ')
+                    AccountsManager().chooseAccount(account)
 
-                if TransactionsManager().deposit(a) == 'not_number':
-                    print('\nDeposit failed.. Value entered was not a number.')
+                    run3 = True
+                    while run3:
+                        option = input("""
+                        --------------------------
+                        | 1. Deposit             |
+                        | 2. Withdraw            |
+                        | 3. List transactions   |
+                        | 4. Back                |
+                        | 5. Exit                |
+                        --------------------------
 
-            elif option == '2':
-                a = input('\nAmount to withdraw: ')
-                mw = TransactionsManager().withdraw(a)
+                        Option: """)
 
-                if mw == 'not_enough_money':
-                    print('\nWithdraw failed.. There is not enough money in your account.')
-                elif mw == 'not_number':
-                    print('\nWithdraw failed.. Value entered was not a number.')
+                        if option == '1':
+                            a = input('\nAmount to deposit: ')
 
-            elif option == '3':
-                for transaction in TransactionsManager().listTransactions():
-                    print(f'\nDate: {transaction[0]}\n{transaction[1].capitalize()}: ${transaction[2][1:]}\nTotal: ${transaction[3]}\n')
+                            if TransactionsManager().deposit(a) == 'not_number':
+                                print('\nDeposit failed.. Value entered was not a number.')
 
-            elif option == '4':
-                break
+                        elif option == '2':
+                            a = input('\nAmount to withdraw: ')
+                            mw = TransactionsManager().withdraw(a)
 
-            else:
-                print('\nOption is not valid!')
+                            if mw == 'not_enough_money':
+                                print('\nWithdraw failed.. There is not enough money in your account.')
+                            elif mw == 'not_number':
+                                print('\nWithdraw failed.. Value entered was not a number.')
+
+                        elif option == '3':
+                            for transaction in TransactionsManager().listTransactions():
+                                print(f'\nDate: {transaction[0]}\n{transaction[1].capitalize()}: ${transaction[2][1:]}\nTotal: ${transaction[3]}\n')
+
+                        elif option == '4':
+                            run3 = False
+
+                        elif option == '5':
+                            run1 = False
+                            run2 = False
+                            run3 = False
+
+                        else:
+                            print('\nOption is not valid!')
+
+                elif acc_op == '2':
+                    new_acc = input('Account name: ')
+                    AccountsManager().addAccount(new_acc)
+                    print('Account created sucessfully')
+
+                elif acc_op == '3':
+                    for account in AccountsManager().listAccounts():
+                        print(account)
+                        
+                    del_acc = input('\nAccount name (Type in exactly as shown): ')
+                    x = input('Are you sure you want to delete this account?\n(Y/N): ').upper()
+
+                    if x == 'Y':
+                        AccountsManager().delAccount(del_acc)
+                        print('Account sucessfully deleted')
+                    else:
+                        print('Account was not deleted')
+
+                elif acc_op == '4':
+                    for account in AccountsManager().listAccounts():
+                        print(account)
+
+                elif acc_op == '5':
+                    run2 = False
+
+                elif acc_op == '6':
+                    run1 = False
+                    run2 = False
+
+                else:
+                    print('\nOption is not valid!')
 
         elif bank_op == '2':
             new_bank = input('Bank name: ')
@@ -210,7 +348,7 @@ def mainLoop():
             for bank in BankManager().listBanks():
                 print(bank)
                 
-            del_bank = input('\nBank name: ')
+            del_bank = input('\nBank name (Type in exactly as shown): ')
             x = input('Are you sure you want to delete this bank?\n(Y/N): ').upper()
 
             if x == 'Y':
@@ -224,7 +362,10 @@ def mainLoop():
                 print(bank)
 
         elif bank_op == '5':
-            break
+            run1 = False
+
+        else:
+            print('\nOption is not valid!')
 
 
 if __name__ == "__main__":
