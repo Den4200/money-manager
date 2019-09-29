@@ -1,6 +1,5 @@
 import os
 import sys
-import csv
 import shutil
 import time
 
@@ -12,6 +11,11 @@ class BankManager:
     def __init__(self):
         self.b_file = os.path.join(sys.path[0], "banks", "banks.csv")
         self.bsl_file = os.path.join(sys.path[0], "banks", "session.lock")
+
+    def _validateBank(self, bank):
+        for b in self.listBanks():
+            if bank == b:
+                return True
 
     def listBanks(self):
         banks = []
@@ -36,26 +40,34 @@ class BankManager:
         TransactionsManager()._initTransactions()
 
     def delBank(self, bank):
-        read = open(self.b_file, 'r')
-        f = open(os.path.join(sys.path[0], "banks", "banks_temp.csv"), 'w')
+        if self._validateBank(bank):
+            read = open(self.b_file, 'r')
+            f = open(os.path.join(sys.path[0], "banks", "banks_temp.csv"), 'w')
 
-        reader = read.readlines()
+            reader = read.readlines()
 
-        for line in reader:
-            if bank != line[:-1]:
-                f.write(line)
+            for line in reader:
+                if bank != line[:-1]:
+                    f.write(line)
 
-        read.close()
-        f.close()
+            read.close()
+            f.close()
 
-        os.remove(self.b_file)
-        os.rename(os.path.join(sys.path[0], "banks", "banks_temp.csv"), self.b_file)
+            os.remove(self.b_file)
+            os.rename(os.path.join(sys.path[0], "banks", "banks_temp.csv"), self.b_file)
 
-        shutil.rmtree(os.path.join(sys.path[0], "banks", bank))
+            shutil.rmtree(os.path.join(sys.path[0], "banks", bank))
+        
+        else:
+            raise Exception("bank does not exist")
 
     def chooseBank(self, bank):
-        with open(self.bsl_file, 'w') as f:
-            f.write(bank)
+        if self._validateBank(bank):
+            with open(self.bsl_file, 'w') as f:
+                f.write(bank)
+        
+        else:
+            raise Exception("bank does not exist")
 
     def _returnCurrent(self):
         with open(self.bsl_file, 'r') as f:
@@ -77,6 +89,11 @@ class AccountsManager:
 
         with open(self.asl_file, 'w') as f:
             f.write('')
+
+    def _validateAcc(self, account):
+        for acc in self.listAccounts():
+            if account == acc:
+                return True
 
     def listAccounts(self):
         accounts = []
@@ -100,26 +117,34 @@ class AccountsManager:
             f.write(account + '\n')
 
     def delAccount(self, account):
-        read = open(self.a_file, 'r')
-        f = open(os.path.join(sys.path[0], "banks", BankManager()._returnCurrent(), "accounts_temp.csv"), 'w')
+        if self._validateAcc(account):
+            read = open(self.a_file, 'r')
+            f = open(os.path.join(sys.path[0], "banks", BankManager()._returnCurrent(), "accounts_temp.csv"), 'w')
 
-        reader = read.readlines()
+            reader = read.readlines()
 
-        for line in reader:
-            if account != line[:-1]:
-                f.write(line)
+            for line in reader:
+                if account != line[:-1]:
+                    f.write(line)
 
-        read.close()
-        f.close()
+            read.close()
+            f.close()
 
-        os.remove(self.a_file)
-        os.rename(os.path.join(sys.path[0], "banks", BankManager()._returnCurrent(), "accounts_temp.csv"), self.a_file)
+            os.remove(self.a_file)
+            os.rename(os.path.join(sys.path[0], "banks", BankManager()._returnCurrent(), "accounts_temp.csv"), self.a_file)
 
-        shutil.rmtree(os.path.join(sys.path[0], "banks", BankManager()._returnCurrent(), account))
+            shutil.rmtree(os.path.join(sys.path[0], "banks", BankManager()._returnCurrent(), account))
+
+        else:
+            raise Exception("account does not exist")
 
     def chooseAccount(self, account):
-        with open(self.asl_file, 'w') as f:
-            f.write(account)
+        if self._validateAcc(account):
+            with open(self.asl_file, 'w') as f:
+                f.write(account)
+
+        else:
+            raise Exception("account does not exist")
 
     def _returnCurrent(self):
         with open(self.asl_file, 'r') as f:
