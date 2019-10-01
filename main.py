@@ -339,84 +339,143 @@ def mainLoop():
 
     run1 = True
     while run1:
-
-        bank_op = input("""
+        u_op = input("""
         --------------------------
-        | 1. Choose bank         |
-        | 2. Add bank            |
-        | 3. Remove Bank         |
-        | 4. List banks          |
-        | 5. Exit                |
+        | 1. Login               |
+        | 2. Register            |
+        | 3. Logout              |
         --------------------------
 
         Option: """)
 
-        if bank_op == '1':
-            for bank in BankManager().listBanks():
-                print(bank)
-            
-            bank = input('\nBank (Type in exactly as shown): ')
+        if u_op == '1':
+            username = input('Username: ')
+            password = getpass('Password: ')
 
-            BankManager().chooseBank(bank)
+            if UserManager().login(username, password):
+                print('\nLogged in sucessfully.')
+                run2 = True
+            else:
+                print('\nLogin failed.')
+                run2 = False
 
-            run2 = True
             while run2:
-                acc_op = input("""
+
+                bank_op = input("""
                 --------------------------
-                | 1. Choose account      |
-                | 2. Add account         |
-                | 3. Remove account      |
-                | 4. List accounts       |
-                | 5. Back                |
-                | 6. Exit                |
+                | 1. Choose bank         |
+                | 2. Add bank            |
+                | 3. Remove Bank         |
+                | 4. List banks          |
+                | 5. Logout              |
                 --------------------------
 
                 Option: """)
 
-                if acc_op == '1':
-                    for account in AccountsManager().listAccounts():
-                        print(account)
+                if bank_op == '1':
+                    for bank in BankManager().listBanks():
+                        print(bank)
                     
-                    account = input('\nAccount (Type in exactly as shown): ')
+                    bank = input('\nBank (Type in exactly as shown): ')
 
-                    AccountsManager().chooseAccount(account)
+                    BankManager().chooseBank(bank)
 
                     run3 = True
                     while run3:
-                        option = input("""
+                        acc_op = input("""
                         --------------------------
-                        | 1. Deposit             |
-                        | 2. Withdraw            |
-                        | 3. List transactions   |
-                        | 4. Back                |
-                        | 5. Exit                |
+                        | 1. Choose account      |
+                        | 2. Add account         |
+                        | 3. Remove account      |
+                        | 4. List accounts       |
+                        | 5. Back                |
+                        | 6. Logout              |
                         --------------------------
 
                         Option: """)
 
-                        if option == '1':
-                            a = input('\nAmount to deposit: ')
+                        if acc_op == '1':
+                            for account in AccountsManager().listAccounts():
+                                print(account)
+                            
+                            account = input('\nAccount (Type in exactly as shown): ')
 
-                            if TransactionsManager().deposit(a) == 'not_number':
-                                print('\nDeposit failed.. Value entered was not a number.')
+                            AccountsManager().chooseAccount(account)
 
-                        elif option == '2':
-                            a = input('\nAmount to withdraw: ')
-                            mw = TransactionsManager().withdraw(a)
+                            run4 = True
+                            while run4:
+                                option = input("""
+                                --------------------------
+                                | 1. Deposit             |
+                                | 2. Withdraw            |
+                                | 3. List transactions   |
+                                | 4. Back                |
+                                | 5. Logout              |
+                                --------------------------
 
-                            if mw == 'not_enough_money':
-                                print('\nWithdraw failed.. There is not enough money in your account.')
-                            elif mw == 'not_number':
-                                print('\nWithdraw failed.. Value entered was not a number.')
+                                Option: """)
 
-                        elif option == '3':
-                            for transaction in TransactionsManager().listTransactions():
-                                print(f'\nDate: {transaction[0]}\n{transaction[1].capitalize()}: ${transaction[2][1:]}\nTotal: ${transaction[3]}\n')
+                                if option == '1':
+                                    a = input('\nAmount to deposit: ')
 
-                        elif option == '4':
+                                    if TransactionsManager().deposit(a) == 'not_number':
+                                        print('\nDeposit failed.. Value entered was not a number.')
+
+                                elif option == '2':
+                                    a = input('\nAmount to withdraw: ')
+                                    mw = TransactionsManager().withdraw(a)
+
+                                    if mw == 'not_enough_money':
+                                        print('\nWithdraw failed.. There is not enough money in your account.')
+                                    elif mw == 'not_number':
+                                        print('\nWithdraw failed.. Value entered was not a number.')
+
+                                elif option == '3':
+                                    for transaction in TransactionsManager().listTransactions():
+                                        print(f'\nDate: {transaction[0]}\n{transaction[1].capitalize()}: ${transaction[2][1:]}\nTotal: ${transaction[3]}\n')
+
+                                elif option == '4':
+                                    run4 = False
+
+                                elif option == '5':
+                                    UserManager().logout()
+
+                                    run1 = False
+                                    run2 = False
+                                    run3 = False
+                                    run4 = False
+
+                                else:
+                                    print('\nOption is not valid!')
+
+                        elif acc_op == '2':
+                            new_acc = input('Account name: ')
+                            AccountsManager().addAccount(new_acc)
+                            print('Account created sucessfully')
+
+                        elif acc_op == '3':
+                            for account in AccountsManager().listAccounts():
+                                print(account)
+                                
+                            del_acc = input('\nAccount name (Type in exactly as shown): ')
+                            x = input('Are you sure you want to delete this account?\n(Y/N): ').upper()
+
+                            if x == 'Y':
+                                AccountsManager().delAccount(del_acc)
+                                print('Account sucessfully deleted')
+                            else:
+                                print('Account was not deleted')
+
+                        elif acc_op == '4':
+                            for account in AccountsManager().listAccounts():
+                                print(account)
+
+                        elif acc_op == '5':
                             run3 = False
 
-                        elif option == '5':
+                        elif acc_op == '6':
+                            UserManager().logout()
+
                             run1 = False
                             run2 = False
                             run3 = False
@@ -424,66 +483,48 @@ def mainLoop():
                         else:
                             print('\nOption is not valid!')
 
-                elif acc_op == '2':
-                    new_acc = input('Account name: ')
-                    AccountsManager().addAccount(new_acc)
-                    print('Account created sucessfully')
+                elif bank_op == '2':
+                    new_bank = input('Bank name: ')
+                    BankManager().addBank(new_bank)
+                    print('Bank created sucessfully!')
 
-                elif acc_op == '3':
-                    for account in AccountsManager().listAccounts():
-                        print(account)
+                elif bank_op == '3':
+                    for bank in BankManager().listBanks():
+                        print(bank)
                         
-                    del_acc = input('\nAccount name (Type in exactly as shown): ')
-                    x = input('Are you sure you want to delete this account?\n(Y/N): ').upper()
+                    del_bank = input('\nBank name (Type in exactly as shown): ')
+                    x = input('Are you sure you want to delete this bank?\n(Y/N): ').upper()
 
                     if x == 'Y':
-                        AccountsManager().delAccount(del_acc)
-                        print('Account sucessfully deleted')
+                        BankManager().delBank(del_bank)
+                        print('Bank sucessfully deleted')
                     else:
-                        print('Account was not deleted')
+                        print('Bank was not deleted')
 
-                elif acc_op == '4':
-                    for account in AccountsManager().listAccounts():
-                        print(account)
+                elif bank_op == '4':
+                    for bank in BankManager().listBanks():
+                        print(bank)
 
-                elif acc_op == '5':
-                    run2 = False
+                elif bank_op == '5':
+                    UserManager().logout()
 
-                elif acc_op == '6':
                     run1 = False
                     run2 = False
 
                 else:
                     print('\nOption is not valid!')
+        elif u_op == '2':
+            username = input('Username: ')
+            pw1 = getpass('Password: ')
+            pw2 = getpass('Retype Password: ')
 
-        elif bank_op == '2':
-            new_bank = input('Bank name: ')
-            BankManager().addBank(new_bank)
-            print('Bank created sucessfully!')
+            UserManager().register(username, pw1, pw2)
 
-        elif bank_op == '3':
-            for bank in BankManager().listBanks():
-                print(bank)
-                
-            del_bank = input('\nBank name (Type in exactly as shown): ')
-            x = input('Are you sure you want to delete this bank?\n(Y/N): ').upper()
+        elif u_op == '3':
+            UserManager().logout()
 
-            if x == 'Y':
-                BankManager().delBank(del_bank)
-                print('Bank sucessfully deleted')
-            else:
-                print('Bank was not deleted')
-
-        elif bank_op == '4':
-            for bank in BankManager().listBanks():
-                print(bank)
-
-        elif bank_op == '5':
             run1 = False
-
-        else:
-            print('\nOption is not valid!')
 
 
 if __name__ == "__main__":
-    # mainLoop()
+    mainLoop()
