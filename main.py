@@ -42,14 +42,18 @@ class UserManager:
             f.write('')
 
     def _validateRegister(self, username, pw1, pw2):
-        if pw1 != '':
-            if pw2 != '':
-                if username != '':
-                    if pw1 == pw2:
-                        for u in self._listUsernames():
-                            if username == u:
-                                return False
-                                
+        if username == '':
+            return False
+        if pw1 == '':
+            return False
+        if pw2 == '':
+            return False
+        if pw1 != pw2:
+            return False
+        for u in self._listUsernames():
+            if username == u:
+                return False
+    
     def register(self, username, pw1, pw2):
         if self._validateRegister(username, pw1, pw2) is None:
 
@@ -62,6 +66,8 @@ class UserManager:
             os.mkdir(os.path.join(sys.path[0], 'users', username))
 
             BankManager()._initBank()
+
+            return True
 
     def delUser(self, username, password):
         if self.login(username, password):
@@ -518,7 +524,10 @@ def mainLoop():
             pw1 = getpass('Password: ')
             pw2 = getpass('Retype Password: ')
 
-            UserManager().register(username, pw1, pw2)
+            if UserManager().register(username, pw1, pw2):
+                print('\nRegistration sucessful.')
+            else:
+                print('\nRegistration failed.')
 
         elif u_op == '3':
             UserManager().logout()
