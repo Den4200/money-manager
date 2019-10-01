@@ -37,6 +37,10 @@ class UserManager:
                         f.write(f'{username}\n{password}\n')
                     return True
 
+    def logout(self):
+        with open(self.usl_file, 'w') as f:
+            f.write('')
+
     def _validateRegister(self, username, pw1, pw2):
         if pw1 != '':
             if pw2 != '':
@@ -56,6 +60,8 @@ class UserManager:
                 f.write(username + '\n')
 
             os.mkdir(os.path.join(sys.path[0], 'users', username))
+
+            BankManager()._initBank()
 
     def delUser(self, username, password):
         if self.login(username, password):
@@ -78,12 +84,25 @@ class UserManager:
         
         else:
             raise Exception("bank does not exist")
+
+    def _returnCurrent(self):
+        with open(self.usl_file, 'r') as f:
+            return f.readlines()[0][:-1]
     
 class BankManager:
     
     def __init__(self):
-        self.b_file = os.path.join(sys.path[0], "banks", "banks.csv")
-        self.bsl_file = os.path.join(sys.path[0], "banks", "session.lock")
+        self.b_file = os.path.join(sys.path[0], "users", UserManager()._returnCurrent(), "banks", "banks.csv")
+        self.bsl_file = os.path.join(sys.path[0], "users", UserManager()._returnCurrent(), "banks", "session.lock")
+
+    def _initBank(self):
+        os.mkdir(os.path.join(sys.path[0], "users", UserManager()._returnCurrent(), "banks"))
+
+        with open(self.b_file, 'w') as f:
+            f.write('')
+
+        with open(self.bsl_file, 'w') as f:
+            f.write('')
 
     def _validateBank(self, bank):
         for b in self.listBanks():
@@ -102,7 +121,7 @@ class BankManager:
         return banks
 
     def addBank(self, bank):
-        os.mkdir(os.path.join(sys.path[0], 'banks', bank))
+        os.mkdir(os.path.join(sys.path[0], "users", UserManager()._returnCurrent(), "banks", bank))
 
         with open(self.b_file, 'a') as f:
             f.write(bank + '\n')
@@ -115,7 +134,7 @@ class BankManager:
     def delBank(self, bank):
         if self._validateBank(bank):
             read = open(self.b_file, 'r')
-            f = open(os.path.join(sys.path[0], "banks", "banks_temp.csv"), 'w')
+            f = open(os.path.join(sys.path[0], "users", UserManager()._returnCurrent(), "banks", "banks_temp.csv"), 'w')
 
             reader = read.readlines()
 
@@ -127,9 +146,9 @@ class BankManager:
             f.close()
 
             os.remove(self.b_file)
-            os.rename(os.path.join(sys.path[0], "banks", "banks_temp.csv"), self.b_file)
+            os.rename(os.path.join(sys.path[0], "users", UserManager()._returnCurrent(), "banks", "banks_temp.csv"), self.b_file)
 
-            shutil.rmtree(os.path.join(sys.path[0], "banks", bank))
+            shutil.rmtree(os.path.join(sys.path[0], "users", UserManager()._returnCurrent(), "banks", bank))
         
         else:
             raise Exception("bank does not exist")
@@ -149,9 +168,9 @@ class BankManager:
 class AccountsManager:
     
     def __init__(self):
-        self.a_file = os.path.join(sys.path[0], "banks", BankManager()._returnCurrent(), "accounts.csv")
-        self.asl_file = os.path.join(sys.path[0], "banks", BankManager()._returnCurrent(), "session.lock")
-        self.b_folder = os.path.join(sys.path[0], 'banks', BankManager()._returnCurrent())
+        self.b_folder = os.path.join(sys.path[0], "users", UserManager()._returnCurrent(), "banks", BankManager()._returnCurrent())
+        self.a_file = os.path.join(self.b_folder, "accounts.csv")
+        self.asl_file = os.path.join(self.b_folder, "session.lock")
 
     def _initAccounts(self):
         os.mkdir(os.path.join(self.b_folder, 'Checking Account'))
@@ -182,17 +201,17 @@ class AccountsManager:
     def addAccount(self, account):
         os.mkdir(os.path.join(self.b_folder, account))
 
+        with open(self.a_file, 'a') as f:
+            f.write(account + '\n')
+
         self.chooseAccount(account)
 
         TransactionsManager()._newTransactionsFile(account)
 
-        with open(self.a_file, 'a') as f:
-            f.write(account + '\n')
-
     def delAccount(self, account):
         if self._validateAcc(account):
             read = open(self.a_file, 'r')
-            f = open(os.path.join(sys.path[0], "banks", BankManager()._returnCurrent(), "accounts_temp.csv"), 'w')
+            f = open(os.path.join(sys.path[0], "users", UserManager()._returnCurrent(), "banks", BankManager()._returnCurrent(), "accounts_temp.csv"), 'w')
 
             reader = read.readlines()
 
@@ -204,9 +223,9 @@ class AccountsManager:
             f.close()
 
             os.remove(self.a_file)
-            os.rename(os.path.join(sys.path[0], "banks", BankManager()._returnCurrent(), "accounts_temp.csv"), self.a_file)
+            os.rename(os.path.join(sys.path[0], "users", UserManager()._returnCurrent(), "banks", BankManager()._returnCurrent(), "accounts_temp.csv"), self.a_file)
 
-            shutil.rmtree(os.path.join(sys.path[0], "banks", BankManager()._returnCurrent(), account))
+            shutil.rmtree(os.path.join(sys.path[0], "users", UserManager()._returnCurrent(), "banks", BankManager()._returnCurrent(), account))
 
         else:
             raise Exception("account does not exist")
@@ -226,13 +245,13 @@ class AccountsManager:
 class TransactionsManager:
 
     def __init__(self):
-        self.t_file = os.path.join(sys.path[0], "banks", BankManager()._returnCurrent(), AccountsManager()._returnCurrent(), "transactions.csv")
+        self.t_file = os.path.join(sys.path[0], "users", UserManager()._returnCurrent(), "banks", BankManager()._returnCurrent(), AccountsManager()._returnCurrent(), "transactions.csv")
 
     def _initTransactions(self):
-        with open(os.path.join(sys.path[0], 'banks', BankManager()._returnCurrent(), 'Checking Account', 'transactions.csv'), 'w') as f:
+        with open(os.path.join(sys.path[0], "users", UserManager()._returnCurrent(), "banks", BankManager()._returnCurrent(), 'Checking Account', 'transactions.csv'), 'w') as f:
             f.write('Initialization,initial,+0.0,0.0\n')
 
-        with open(os.path.join(sys.path[0], 'banks', BankManager()._returnCurrent(), 'Savings Account', 'transactions.csv'), 'w') as f:
+        with open(os.path.join(sys.path[0], "users", UserManager()._returnCurrent(), "banks", BankManager()._returnCurrent(), 'Savings Account', 'transactions.csv'), 'w') as f:
             f.write('Initialization,initial,+0.0,0.0\n')
 
     def _newTransactionsFile(self, account):
@@ -468,6 +487,3 @@ def mainLoop():
 
 if __name__ == "__main__":
     # mainLoop()
-
-    print(UserManager().register('KevinNoob43', 'fsni3fe*g','fsni3fe*g'))
-
