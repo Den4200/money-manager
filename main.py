@@ -2,10 +2,83 @@ import os
 import sys
 import shutil
 import time
+from getpass import getpass
 
-class User:
-    pass
+class UserManager:
+    
+    def __init__(self):
+        self.u_file = os.path.join(sys.path[0], "users", "users.csv")
+        self.usl_file = os.path.join(sys.path[0], "users", "session.lock")
 
+    def _listUsers(self):
+        users = []
+
+        with open(self.u_file, 'r') as f:
+            lines = f.readlines()
+
+            for line in lines:
+                users.append(line[:-1].split(','))
+
+        return users
+
+    def _listUsernames(self):
+        usernames = [username[0] for username in self._listUsers()]
+        return usernames
+
+    def _listPasswords(self):
+        passwords = [password[1] for password in self._listUsers()]
+        return passwords
+
+    def login(self, username, password):
+        for index, u in enumerate(self._listUsernames()):
+            if username == u:
+                if password == self._listPasswords()[index]:
+                    with open(self.usl_file, 'w') as f:
+                        f.write(f'{username}\n{password}\n')
+                    return True
+
+    def _validateRegister(self, username, pw1, pw2):
+        if pw1 != '':
+            if pw2 != '':
+                if username != '':
+                    if pw1 == pw2:
+                        for u in self._listUsernames():
+                            if username == u:
+                                return False
+                                
+    def register(self, username, pw1, pw2):
+        if self._validateRegister(username, pw1, pw2) is None:
+
+            with open(self.u_file, 'a') as f:
+                f.write(f'{username},{pw1}\n')
+
+            with open(self.usl_file, 'w') as f:
+                f.write(username + '\n')
+
+            os.mkdir(os.path.join(sys.path[0], 'users', username))
+
+    def delUser(self, username, password):
+        if self.login(username, password):
+            read = open(self.u_file, 'r')
+            f = open(os.path.join(sys.path[0], "users", "users_temp.csv"), 'w')
+
+            reader = read.readlines()
+
+            for line in reader:
+                if f'{username},{password}' != line[:-1]:
+                    f.write(line)
+
+            read.close()
+            f.close()
+
+            os.remove(self.u_file)
+            os.rename(os.path.join(sys.path[0], "users", "users_temp.csv"), self.u_file)
+
+            shutil.rmtree(os.path.join(sys.path[0], "users", username))
+        
+        else:
+            raise Exception("bank does not exist")
+    
 class BankManager:
     
     def __init__(self):
@@ -394,5 +467,7 @@ def mainLoop():
 
 
 if __name__ == "__main__":
-    mainLoop()
+    # mainLoop()
+
+    print(UserManager().register('KevinNoob43', 'fsni3fe*g','fsni3fe*g'))
 
