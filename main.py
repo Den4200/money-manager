@@ -34,7 +34,7 @@ class UserManager:
             if username == u:
                 if password == self._listPasswords()[index]:
                     with open(self.usl_file, 'w') as f:
-                        f.write(f'{username}\n{password}\n')
+                        f.write(f'{username}\n')
                     return True
 
     def logout(self):
@@ -87,9 +87,11 @@ class UserManager:
             os.rename(os.path.join(sys.path[0], "users", "users_temp.csv"), self.u_file)
 
             shutil.rmtree(os.path.join(sys.path[0], "users", username))
+
+            self.logout()
         
         else:
-            raise Exception("bank does not exist")
+            raise Exception("user does not exist")
 
     def _returnCurrent(self):
         with open(self.usl_file, 'r') as f:
@@ -349,7 +351,7 @@ def mainLoop():
         --------------------------
         | 1. Login               |
         | 2. Register            |
-        | 3. Logout              |
+        | 3. Exit                |
         --------------------------
 
         Option: """)
@@ -373,7 +375,8 @@ def mainLoop():
                 | 2. Add bank            |
                 | 3. Remove Bank         |
                 | 4. List banks          |
-                | 5. Logout              |
+                | 5. Delete account      |
+                | 6. Logout              |
                 --------------------------
 
                 Option: """)
@@ -512,6 +515,19 @@ def mainLoop():
                         print(bank)
 
                 elif bank_op == '5':
+                    username = input('Username: ')
+                    password = getpass('Password: ')
+                    sure = input('Are you sure you want to delete your user? (Y/N): ').upper()
+
+                    if sure == 'Y':
+                        UserManager().delUser(username, password)
+                        print('User has been sucessfully deleted.')
+
+                        run2 = False
+                    else:
+                        print('User was not deleted.')
+
+                elif bank_op == '6':
                     UserManager().logout()
 
                     run1 = False
